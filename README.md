@@ -1,44 +1,44 @@
 # terraform-provider-lxc
 
-This is a Terraform plugin that provides an LXC provider.
+LXC provider plugin for Terraform.
 
 ## Installation
 
 ### Requirements
 
-Make sure you have [Terraform](http://terraform.io) installed and is accessible on your `$PATH`.
-
-Also make sure you have LXC installed and configured on the server you will be running this.
+1. [Terraform](http://terraform.io). Make sure you have it installed and it's accessible from your `$PATH`.
+2. LXC
 
 ### From Source (only method right now)
 
-1. Install Go and [configure](https://golang.org/doc/code.html) your workspace.
-2. Install `godep`:
+* Install the `lxc-dev` package appropriate for your distribution.
+* Install Go and [configure](https://golang.org/doc/code.html) your workspace.
+* Install `godep`:
 
 ```shell
 $ go get github.com/tools/godep
 ```
 
-2. Download this repo:
+* Download this repo:
 
 ```shell
 $ go get github.com/jtopjian/terraform-provider-lxc
 ```
 
-3. Install the dependencies:
+* Install the dependencies:
 
 ```shell
 $ cd $GOPATH/src/github.com/jtopjian/terraform-provider-lxc
 $ godep restore
 ```
 
-4. Compile it:
+* Compile it:
 
 ```shell
 $ go build -o terraform-provider-lxc
 ```
 
-5. Copy it to a directory:
+* Copy it to a directory:
 
 ```shell
 $ sudo cp terraform-provider-lxc ~/lxc-demo
@@ -56,7 +56,7 @@ resource "lxc_container" "ubuntu" {
 }
 
 resource "lxc_clone" "ubuntu_clone" {
-  name = "ubuntu_clone"
+  name   = "ubuntu_clone"
   source = "${lxc_container.ubuntu.name}"
 }
 ```
@@ -66,13 +66,20 @@ Call this file `demo.tf` or anything you want and place it in the same directory
 ```shell
 $ terraform plan
 $ terraform apply
+$ terraform show
 ```
 
 ## Reference
 
 ### Provider
 
-`provider "lxc" {}`
+#### Example
+
+```ruby
+provider "lxc" {
+  lxc_path = "/var/lib/lxc"
+}
+```
 
 #### Parameters
 
@@ -80,7 +87,14 @@ $ terraform apply
 
 ### lxc_container
 
-`resource "lxc_container" "my_container" {}`
+#### Example
+
+```ruby
+resource "lxc_container" "my_container" {
+  name    = "my_container"
+  backend = "zfs"
+}
+```
 
 #### Parameters
 
@@ -101,7 +115,15 @@ $ terraform apply
 
 ### lxc_clone
 
-`resource "lxc_clone" "my_clone" {}`
+#### Example
+
+```ruby
+resource "lxc_clone" "my_clone" {
+  name    = "my_clone"
+  source  = "my_container"
+  backend = "zfs"
+}
+```
 
 #### Parameters
 
