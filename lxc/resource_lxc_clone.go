@@ -46,6 +46,24 @@ func resourceLXCClone() *schema.Resource {
 				Optional: true,
 				Default:  nil,
 			},
+			"network_interface": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "veth",
+						},
+						"options": &schema.Schema{
+							Type:     schema.TypeMap,
+							Optional: true,
+							Default:  nil,
+						},
+					},
+				},
+			},
 
 			// exported
 			"address_v4": &schema.Schema{
@@ -107,17 +125,14 @@ func resourceLXCCloneCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	c, err = lxc.NewContainer(name, config.LXCPath)
-	if err != nil {
+	if err := lxcOptions(c, d, config); err != nil {
 		return err
 	}
 
-	if lxcOptions, ok := d.Get("options").(map[string]interface{}); ok {
-		if len(lxcOptions) > 0 {
-			if err := setConfigItems(c, config.LXCPath, lxcOptions); err != nil {
-				return err
-			}
-		}
+	// causes lxc to re-read the config file
+	c, err = lxc.NewContainer(name, config.LXCPath)
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Starting container %s\n", c.Name())
@@ -130,9 +145,7 @@ func resourceLXCCloneCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Waiting container to startup networking...\n")
-	if _, err := c.WaitIPAddresses(5 * time.Second); err != nil {
-		log.Fatalf("ERROR: %s\n", err.Error())
-	}
+	c.WaitIPAddresses(5 * time.Second)
 
 	return resourceLXCCloneRead(d, meta)
 }

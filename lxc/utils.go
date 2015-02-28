@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"gopkg.in/lxc/go-lxc.v2"
 )
 
@@ -40,46 +41,58 @@ func lxcWaitForState(c *lxc.Container, LXCPath string, pendingStates []string, t
 	return nil
 }
 
-func setConfigItems(c *lxc.Container, configPath string, options map[string]interface{}) error {
+func lxcOptions(c *lxc.Container, d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	var options []string
+	optionsFound := false
+	includeFound := false
+	configFile := config.LXCPath + "/" + c.Name() + "/config"
+	customConfigFile := config.LXCPath + "/" + c.Name() + "/config_tf"
+	includeLine := fmt.Sprintf("lxc.include = %s", customConfigFile)
 
-	// first append a line to the main config file that points to another.
-	// check and see if that line has been appended already.
-	// if not, append it.
-	configFile := configPath + "/" + c.Name() + "/config"
-	customConfigFile := configPath + "/" + c.Name() + "/config_tf"
-	customConfigLine := fmt.Sprintf("lxc.include = %s", customConfigFile)
+	networkInterfaces := d.Get("network_interface").([]interface{})
+	for _, n := range networkInterfaces {
+		nic := n.(map[string]interface{})
+		options = append(options, fmt.Sprintf("lxc.network.type = %s", nic["type"]))
+		for k, v := range nic["options"].(map[string]interface{}) {
+			options = append(options, fmt.Sprintf("lxc.network.%s = %s", k, v.(string)))
+		}
+	}
 
-	log.Printf("[DEBUG] %v", configFile)
+	containerOptions := d.Get("options").(map[string]interface{})
+	if containerOptions != nil {
+		optionsFound = true
+		for k, v := range containerOptions {
+			options = append(options, fmt.Sprintf("%s = %s", k, v.(string)))
+		}
+	}
+
 	configFileContents, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
 
-	configFound := false
-	lines := strings.Split(string(configFileContents), "\n")
-	for _, line := range lines {
-		if line == customConfigLine {
-			configFound = true
+	if optionsFound == true {
+		lines := strings.Split(string(configFileContents), "\n")
+		for _, line := range lines {
+			if line == includeLine {
+				includeFound = true
+			}
 		}
-	}
 
-	// if the lxc.include line was not found, add it.
-	if configFound == false {
-		lines = append(lines, customConfigLine)
-		lines = append(lines, "\n")
-		log.Printf("[DEBUG] %v", lines)
-		if err := ioutil.WriteFile(configFile, []byte(strings.Join(lines, "\n")), 0640); err != nil {
+		// if the lxc.include line was not found, add it.
+		if includeFound == false {
+			lines = append(lines, includeLine, "\n")
+			if err := ioutil.WriteFile(configFile, []byte(strings.Join(lines, "\n")), 0640); err != nil {
+				return err
+			}
+		}
+
+		// now rewrite all custom config options
+		log.Printf("[DEBUG] %v", options)
+		if err := ioutil.WriteFile(customConfigFile, []byte(strings.Join(options, "\n")), 0640); err != nil {
 			return err
 		}
-	}
-
-	// now rewrite all custom config options
-	lines = lines[:0]
-	for k, v := range options {
-		lines = append(lines, fmt.Sprintf("%s = %s", k, v.(string)))
-	}
-	if err := ioutil.WriteFile(customConfigFile, []byte(strings.Join(lines, "\n")), 0640); err != nil {
-		return err
 	}
 
 	return nil

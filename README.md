@@ -93,6 +93,14 @@ provider "lxc" {
 resource "lxc_container" "my_container" {
   name    = "my_container"
   backend = "zfs"
+  network_interface {
+    type = "veth"
+    options {
+      link = "lxcbr0"
+      flags = "up"
+      hwaddr = "00:16:3e:xx:xx:xx"
+    }
+  }
 }
 ```
 
@@ -107,6 +115,13 @@ resource "lxc_container" "my_container" {
 * `template_flush_cache`: Optional. Defaults to `false`.
 * `template_disable_gpg_validation`: Optional. defaults to `false`.
 * `options`: Optional. A set of key/value pairs of extra LXC options. See `lxc.container.conf(5)`.
+* `network_interface`: Optional. Defines a NIC.
+  * `type`: Optional. The type of NIC. Defaults to `veth`.
+  * `options`: Optional. A set of key/value `lxc.network.*` pairs for the NIC.
+
+#### Notes
+
+Because `lxc.network.type` _must_ be the first line that denotes a new NIC, a separate `network_interface` parameter is used rather than bundling it all into `options`
 
 #### Exported Parameters
 
@@ -122,6 +137,14 @@ resource "lxc_clone" "my_clone" {
   name    = "my_clone"
   source  = "my_container"
   backend = "zfs"
+  network_interface {
+    type = "veth"
+    options {
+      link = "lxcbr0"
+      flags = "up"
+      hwaddr = "00:16:3e:xx:xx:xx"
+    }
+  }
 }
 ```
 
@@ -132,8 +155,10 @@ resource "lxc_clone" "my_clone" {
 * `backend`: Optional. The storage backend to use. Valid options are: btrfs, directory, lvm, zfs, aufs, overlayfs, loopback, or best. Defaults to `directory`.
 * `keep_mac`: Optional. Keep the MAC address(es) of the source. Defaults to `false`.
 * `snapshot`: Optional. Whether to clone as a snapshot instead of copy. Defaults to `false`.
-
 * `options`: Optional. A set of key/value pairs of extra LXC options. See `lxc.container.conf(5)`.
+* `network_interface`: Optional. Defines a NIC.
+  * `type`: Optional. The type of NIC. Defaults to `veth`.
+  * `options`: Optional. A set of key/value `lxc.network.*` pairs for the NIC.
 
 #### Exported Parameters
 
