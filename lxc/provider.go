@@ -21,8 +21,9 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"lxc_container": resourceLXCContainer(),
+			"lxc_bridge":    resourceLXCBridge(),
 			"lxc_clone":     resourceLXCClone(),
+			"lxc_container": resourceLXCContainer(),
 		},
 
 		ConfigureFunc: configureProvider,

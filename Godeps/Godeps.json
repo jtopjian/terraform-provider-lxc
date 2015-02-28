@@ -1,9 +1,6 @@
 {
 	"ImportPath": "github.com/jtopjian/terraform-provider-lxc",
 	"GoVersion": "go1.4.2",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/hashicorp/errwrap",
@@ -87,6 +84,10 @@
 		{
 			"ImportPath": "github.com/mitchellh/reflectwalk",
 			"Rev": "9cdd861463675960a0a0083a7e2023e7b0c994d7"
+		},
+		{
+			"ImportPath": "github.com/vishvananda/netlink",
+			"Rev": "1fd3169564abccd94f0e2786160ab294832a498b"
 		},
 		{
 			"ImportPath": "gopkg.in/lxc/go-lxc.v2",
