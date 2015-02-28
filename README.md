@@ -61,7 +61,57 @@ resource "lxc_clone" "ubuntu_clone" {
 }
 ```
 
-Call this file `demo.tf` or anything you want and place it in the same directory as `terraform-provider-lxc`. Then run:
+Here's a more complete example that does the following:
+
+* Creates a new bridge called `my_bridge`.
+* Creates an Ubuntu container with two interfaces: one on the default `lxcbr0` and one on `my_bridge`.
+* Creates an Ubuntu container with one interface on the `my_bridge` bridge.
+
+```ruby
+provider "lxc" {}
+
+resource "lxc_bridge" "my_bridge" {
+  name = "my_bridge"
+}
+
+resource "lxc_container" "ubuntu" {
+  name = "ubuntu"
+  network_interface {
+    type = "veth"
+    options {
+      link = "lxcbr0"
+      flags = "up"
+      hwaddr = "00:16:3e:xx:xx:xx"
+    }
+  }
+  network_interface {
+    type = "veth"
+    options {
+      link = "${lxc_bridge.my_bridge.name}"
+      flags = "up"
+      hwaddr = "00:16:3e:xx:xx:xx"
+      veth.pair = "foobar"
+      ipv4 = "192.168.255.1/24"
+    }
+  }
+}
+
+resource "lxc_container" "ubuntu2" {
+  name = "ubuntu2"
+  network_interface {
+    type = "veth"
+    options {
+      link = "${lxc_bridge.my_bridge.name}"
+      flags = "up"
+      hwaddr = "00:16:3e:xx:xx:xx"
+      veth.pair = "barfoo"
+      ipv4 = "192.168.255.2/24"
+    }
+  }
+}
+```
+
+For either example, save it to a `.tf` file and run:
 
 ```shell
 $ terraform plan
@@ -84,6 +134,24 @@ provider "lxc" {
 #### Parameters
 
 * `lxc_path`: Optional. Explicitly set the path to where containers will be built.
+
+### lxc_bridge
+
+#### Example
+
+```ruby
+resource "lxc_bridge" "my_bridge" {
+  name = "my_bridge"
+}
+```
+
+#### Parameters
+
+* `name`: Required. The name of the bridge.
+
+#### Exported Parameters
+
+* `mac`: The MAC address of the new bridge.
 
 ### lxc_container
 
