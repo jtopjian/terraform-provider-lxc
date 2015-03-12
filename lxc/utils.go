@@ -98,7 +98,7 @@ func lxcOptions(c *lxc.Container, d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func checkBackend(backend string) (lxc.BackendStore, error) {
+func lxcCheckBackend(backend string) (lxc.BackendStore, error) {
 	switch backend {
 	case "btrfs":
 		return lxc.Btrfs, nil

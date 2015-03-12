@@ -76,6 +76,10 @@ resource "lxc_bridge" "my_bridge" {
 
 resource "lxc_container" "ubuntu" {
   name = "ubuntu"
+  template_name = "ubuntu"
+  template_release = "trusty"
+  template_arch = "amd64"
+  template_extra_args = ["--auth-key", "/root/.ssh/id_rsa.pub"]
   network_interface {
     type = "veth"
     options {
@@ -98,6 +102,10 @@ resource "lxc_container" "ubuntu" {
 
 resource "lxc_container" "ubuntu2" {
   name = "ubuntu2"
+  template_name = "ubuntu"
+  template_release = "trusty"
+  template_arch = "amd64"
+  template_extra_args = ["--auth-key", "/root/.ssh/id_rsa.pub"]
   network_interface {
     type = "veth"
     options {
@@ -180,8 +188,14 @@ resource "lxc_container" "my_container" {
 * `template_distro`: Optional. Defaults to `ubuntu`.
 * `template_release`: Optional. Defaults to `trusty`.
 * `template_arch`: Optional. Defaults to `amd64`.
+* `template_variant`: Optional. Defaults to `default`.
+* `template_server`: Optional. Defaults to `images.linuxcontainers.org`.
+* `template_key_id`: Optional.
+* `template_key_server`: Optional.
 * `template_flush_cache`: Optional. Defaults to `false`.
+* `template_force_cache`: Optional. Defaults to `false`.
 * `template_disable_gpg_validation`: Optional. defaults to `false`.
+* `template_extra_args`: Optional. A list of extra parameters to pass to the template.
 * `options`: Optional. A set of key/value pairs of extra LXC options. See `lxc.container.conf(5)`.
 * `network_interface`: Optional. Defines a NIC.
   * `type`: Optional. The type of NIC. Defaults to `veth`.

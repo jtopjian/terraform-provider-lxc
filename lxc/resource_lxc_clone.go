@@ -82,7 +82,7 @@ func resourceLXCCloneCreate(d *schema.ResourceData, meta interface{}) error {
 	var c *lxc.Container
 	config := meta.(*Config)
 
-	backendType, err := checkBackend(d.Get("backend").(string))
+	backendType, err := lxcCheckBackend(d.Get("backend").(string))
 	if err != nil {
 		return err
 	}

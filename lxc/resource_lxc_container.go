@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"gopkg.in/lxc/go-lxc.v2"
 )
@@ -51,7 +52,34 @@ func resourceLXCContainer() *schema.Resource {
 				Default:  "amd64",
 				ForceNew: true,
 			},
+			"template_variant": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "default",
+				ForceNew: true,
+			},
+			"template_server": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "images.linuxcontainers.org",
+				ForceNew: true,
+			},
+			"template_key_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"template_key_server": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"template_flush_cache": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"template_force_cache": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -60,6 +88,14 @@ func resourceLXCContainer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"template_extra_args": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set: func(v interface{}) int {
+					return hashcode.String(v.(string))
+				},
 			},
 			"options": &schema.Schema{
 				Type:     schema.TypeMap,
@@ -102,7 +138,7 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 	var c *lxc.Container
 	config := meta.(*Config)
 
-	backendType, err := checkBackend(d.Get("backend").(string))
+	backendType, err := lxcCheckBackend(d.Get("backend").(string))
 	if err != nil {
 		return err
 	}
@@ -116,14 +152,39 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(c.Name())
 
 	log.Printf("[INFO] Creating container %s\n", c.Name())
-	options := lxc.TemplateOptions{
-		Backend:              backendType,
-		Template:             d.Get("template_name").(string),
-		Distro:               d.Get("template_distro").(string),
-		Release:              d.Get("template_release").(string),
-		Arch:                 d.Get("template_arch").(string),
-		FlushCache:           d.Get("template_flush_cache").(bool),
-		DisableGPGValidation: d.Get("template_disable_gpg_validation").(bool),
+
+	var ea []string
+	for _, v := range d.Get("template_extra_args").(*schema.Set).List() {
+		ea = append(ea, v.(string))
+	}
+
+	var options lxc.TemplateOptions
+	templateName := d.Get("template_name").(string)
+	if templateName == "download" {
+		options = lxc.TemplateOptions{
+			Backend:              backendType,
+			Template:             d.Get("template_name").(string),
+			Distro:               d.Get("template_distro").(string),
+			Release:              d.Get("template_release").(string),
+			Arch:                 d.Get("template_arch").(string),
+			Variant:              d.Get("template_variant").(string),
+			Server:               d.Get("template_server").(string),
+			KeyID:                d.Get("template_key_id").(string),
+			KeyServer:            d.Get("template_key_server").(string),
+			FlushCache:           d.Get("template_flush_cache").(bool),
+			ForceCache:           d.Get("template_force_cache").(bool),
+			DisableGPGValidation: d.Get("template_disable_gpg_validation").(bool),
+			ExtraArgs:            ea,
+		}
+	} else {
+		options = lxc.TemplateOptions{
+			Backend:    backendType,
+			Template:   d.Get("template_name").(string),
+			Release:    d.Get("template_release").(string),
+			Arch:       d.Get("template_arch").(string),
+			FlushCache: d.Get("template_flush_cache").(bool),
+			ExtraArgs:  ea,
+		}
 	}
 
 	if err := c.Create(options); err != nil {
@@ -182,6 +243,11 @@ func resourceLXCContainerRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("address_v4", ipv4)
 	d.Set("address_v6", ipv6)
+
+	d.SetConnInfo(map[string]string{
+		"type": "ssh",
+		"host": ipv4,
+	})
 
 	return nil
 }
