@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"gopkg.in/lxc/go-lxc.v2"
 )
@@ -90,12 +89,9 @@ func resourceLXCContainer() *schema.Resource {
 				Default:  false,
 			},
 			"template_extra_args": &schema.Schema{
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set: func(v interface{}) int {
-					return hashcode.String(v.(string))
-				},
 			},
 			"options": &schema.Schema{
 				Type:     schema.TypeMap,
@@ -154,7 +150,7 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[INFO] Creating container %s\n", c.Name())
 
 	var ea []string
-	for _, v := range d.Get("template_extra_args").(*schema.Set).List() {
+	for _, v := range d.Get("template_extra_args").([]interface{}) {
 		ea = append(ea, v.(string))
 	}
 
