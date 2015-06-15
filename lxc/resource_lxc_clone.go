@@ -95,8 +95,6 @@ func resourceLXCCloneCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(c.Name())
-
 	cl, err := lxc.NewContainer(source, config.LXCPath)
 	if err != nil {
 		return err
@@ -146,6 +144,8 @@ func resourceLXCCloneCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Waiting container to startup networking...\n")
 	c.WaitIPAddresses(5 * time.Second)
+
+	d.SetId(c.Name())
 
 	return resourceLXCCloneRead(d, meta)
 }

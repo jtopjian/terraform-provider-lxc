@@ -145,9 +145,7 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.SetId(c.Name())
-
-	log.Printf("[INFO] Creating container %s\n", c.Name())
+	log.Printf("[INFO] Attempting to create container %s\n", c.Name())
 
 	var ea []string
 	for _, v := range d.Get("template_extra_args").([]interface{}) {
@@ -208,6 +206,8 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[INFO] Waiting container to startup networking...\n")
 	c.WaitIPAddresses(5 * time.Second)
+
+	d.SetId(c.Name())
 
 	return resourceLXCContainerRead(d, meta)
 }
