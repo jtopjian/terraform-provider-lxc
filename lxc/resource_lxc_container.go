@@ -185,6 +185,8 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
+	d.SetId(c.Name())
+
 	if err := lxcOptions(c, d, config); err != nil {
 		return err
 	}
@@ -206,8 +208,6 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[INFO] Waiting container to startup networking...\n")
 	c.WaitIPAddresses(5 * time.Second)
-
-	d.SetId(c.Name())
 
 	return resourceLXCContainerRead(d, meta)
 }
