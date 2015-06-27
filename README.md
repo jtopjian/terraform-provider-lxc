@@ -199,6 +199,7 @@ resource "lxc_container" "my_container" {
 * `options`: Optional. A set of key/value pairs of extra LXC options. See `lxc.container.conf(5)`.
 * `network_interface`: Optional. Defines a NIC.
   * `type`: Optional. The type of NIC. Defaults to `veth`.
+  * `management`: Optional. Make this NIC the management / accessible NIC.
   * `options`: Optional. A set of key/value `lxc.network.*` pairs for the NIC.
 
 #### Notes
@@ -240,6 +241,7 @@ resource "lxc_clone" "my_clone" {
 * `options`: Optional. A set of key/value pairs of extra LXC options. See `lxc.container.conf(5)`.
 * `network_interface`: Optional. Defines a NIC.
   * `type`: Optional. The type of NIC. Defaults to `veth`.
+  * `management`: Optional. Make this NIC the management / accessible NIC.
   * `options`: Optional. A set of key/value `lxc.network.*` pairs for the NIC.
 
 #### Exported Parameters
