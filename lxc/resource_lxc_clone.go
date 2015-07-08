@@ -56,6 +56,11 @@ func resourceLXCClone() *schema.Resource {
 							Optional: true,
 							Default:  "veth",
 						},
+						"management": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  false,
+						},
 						"options": &schema.Schema{
 							Type:     schema.TypeMap,
 							Optional: true,
@@ -158,25 +163,9 @@ func resourceLXCCloneRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	ipv4 := ""
-	ipv6 := ""
-	if ipv4s, err := c.IPv4Addresses(); err == nil {
-		for _, v := range ipv4s {
-			if ipv4 == "" {
-				ipv4 = v
-			}
-		}
+	if err = lxcIPAddressConfiguration(c, d); err != nil {
+		return err
 	}
-	if ipv6s, err := c.IPv6Addresses(); err == nil {
-		for _, v := range ipv6s {
-			if ipv6 == "" {
-				ipv6 = v
-			}
-		}
-	}
-
-	d.Set("address_v4", ipv4)
-	d.Set("address_v6", ipv6)
 
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,4 +120,42 @@ func lxcCheckBackend(backend string) (lxc.BackendStore, error) {
 	default:
 		return 0, fmt.Errorf("Invalid backend. Possible values are: btrfs, directory, lvm, zfs, aufs, overlayfs, loopback, or best.")
 	}
+}
+
+func lxcIPAddressConfiguration(c *lxc.Container, d *schema.ResourceData) error {
+	// Loop through all interfaces and see if one is marked as management
+	managementNIC := "eth0"
+	i := 0
+	networkInterfaces := d.Get("network_interface").([]interface{})
+	for _, n := range networkInterfaces {
+		nic := n.(map[string]interface{})
+		if nic["management"] == true {
+			managementNIC = fmt.Sprintf("%s%s", "eth", strconv.Itoa(i))
+		}
+		i++
+	}
+
+	// Get the IP addresses of the management NIC
+	// For now, we'll just use the first returned IP.
+	d.Set("address_v4", "")
+	ipv4s, err := c.IPv4Address(managementNIC)
+	if err == nil {
+		if len(ipv4s) > 0 {
+			d.Set("address_v4", ipv4s[0])
+			d.SetConnInfo(map[string]string{
+				"type": "ssh",
+				"host": ipv4s[0],
+			})
+		}
+	}
+
+	d.Set("address_v6", "")
+	ipv6s, err := c.IPv6Address(managementNIC)
+	if err == nil {
+		if len(ipv6s) > 0 {
+			d.Set("address_v6", ipv6s[0])
+		}
+	}
+
+	return nil
 }
