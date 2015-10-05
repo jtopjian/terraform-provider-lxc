@@ -20,6 +20,7 @@ func resourceLXCClone() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"backend": &schema.Schema{
 				Type:     schema.TypeString,
@@ -30,25 +31,30 @@ func resourceLXCClone() *schema.Resource {
 			"source": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"keep_mac": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"snapshot": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"options": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
 				Default:  nil,
+				ForceNew: true,
 			},
 			"network_interface": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": &schema.Schema{

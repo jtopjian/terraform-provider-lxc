@@ -93,7 +93,7 @@ var testAccLXCBridge = `
 		name = "accept_test"
 	}`
 
-var testAccLXCBridgeWithIP = `
+var testAccLXCBridgeWithIface = `
 	resource "lxc_bridge" "accept_test" {
 		name = "accept_test_ip"
 		hostInterface = "accept_test"
