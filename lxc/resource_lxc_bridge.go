@@ -41,7 +41,8 @@ func resourceLXCBridgeCreate(d *schema.ResourceData, meta interface{}) error {
 	br := d.Get("name").(string)
 	var bridge netlink.Link
 
-	if bridge, err := netlink.LinkByName(br); err != nil {
+	bridge, err := netlink.LinkByName(br)
+	if err != nil {
 		bridge = &netlink.Bridge{netlink.LinkAttrs{
 			Name: d.Get("name").(string),
 		}}
@@ -59,14 +60,14 @@ func resourceLXCBridgeCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Error adding host interface %s to bridge %s : %v", ifaceName, br, err)
 			}
 		}
-		log.Printf("[INFO] Created new bridge %s: %v", br, bridge)
+		log.Printf("[INFO] Created new bridge %s", br)
 	} else {
-		log.Printf("[INFO] Found existing bridge %s: %v", br, bridge)
+		log.Printf("[INFO] Found existing bridge %s", br)
 	}
 
-	log.Printf("[INFO] Bringing bridge up.")
+	log.Printf("[INFO] Bringing bridge %s up", br)
 	if err := netlink.LinkSetUp(bridge); err != nil {
-		return fmt.Errorf("Error bringing bridge up: %v", err)
+		return fmt.Errorf("Error bringing bridge %s up: %v", br, err)
 	}
 
 	d.SetId(strconv.Itoa(bridge.Attrs().Index))
