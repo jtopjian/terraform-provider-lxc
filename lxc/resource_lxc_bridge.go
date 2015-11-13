@@ -47,7 +47,7 @@ func resourceLXCBridgeCreate(d *schema.ResourceData, meta interface{}) error {
 			Name: d.Get("name").(string),
 		}}
 		if err := netlink.LinkAdd(bridge); err != nil {
-			return fmt.Errorf("Error creating bridge %s: %v", br, err)
+			return fmt.Errorf("Error creating bridge %s: %v", br, err
 		}
 
 		if ifaceName, ok := d.GetOk("hostInterface"); ok {
@@ -60,9 +60,9 @@ func resourceLXCBridgeCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Error adding host interface %s to bridge %s : %v", ifaceName, br, err)
 			}
 		}
-		log.Printf("[INFO] Created new bridge %s", br)
+		log.Printf("[INFO] Created new bridge %s: %v", br, bridge)
 	} else {
-		log.Printf("[INFO] Found existing bridge %s", br)
+		log.Printf("[INFO] Found existing bridge %s: %v", br, bridge)
 	}
 
 	log.Printf("[INFO] Bringing bridge %s up", br)
