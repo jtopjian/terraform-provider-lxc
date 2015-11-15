@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/shlex"
 	"github.com/hashicorp/terraform/helper/schema"
 	"gopkg.in/lxc/go-lxc.v2"
 )
@@ -20,6 +21,7 @@ func resourceLXCContainer() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"backend": &schema.Schema{
 				Type:     schema.TypeString,
@@ -77,30 +79,36 @@ func resourceLXCContainer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"template_force_cache": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"template_disable_gpg_validation": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"template_extra_args": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
 			},
 			"options": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
 				Default:  nil,
+				ForceNew: true,
 			},
 			"network_interface": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": &schema.Schema{
@@ -130,6 +138,12 @@ func resourceLXCContainer() *schema.Resource {
 			"address_v6": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"exec": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
 			},
 		},
 	}
@@ -209,6 +223,20 @@ func resourceLXCContainerCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if err := lxcWaitForState(c, config.LXCPath, []string{"STOPPED", "STARTING"}, "RUNNING"); err != nil {
 		return err
+	}
+
+	if commands, defined := d.GetOk("exec"); defined {
+		if defined {
+			for _, command := range commands.([]interface{}) {
+				args, err := shlex.Split(command.(string))
+				if( err != nil ){
+					log.Printf("[ERROR] Error parsing arguments for command %d, skipping to next command",command.(string))
+				}else{
+					log.Printf("[INFO] Running command in container %s : %s\n", c.Name(), command.(string))
+					c.RunCommand(args,lxc.DefaultAttachOptions)
+				}
+			}
+		}
 	}
 
 	log.Printf("[INFO] Waiting container to startup networking...\n")

@@ -26,6 +26,17 @@ func TestLXCBridge(t *testing.T) {
 						"lxc_bridge.accept_test", "name", "accept_test"),
 				),
 			},
+			resource.TestStep{
+				Config: testAccLXCBridgeWithIface,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLXCBridgeExists(
+						t, "lxc_bridge.accept_test_iface", &bridge),
+					resource.TestCheckResourceAttr(
+						"lxc_bridge.accept_test_iface", "name", "accept_test_iface"),
+					resource.TestCheckResourceAttr(
+						"lxc_bridge.accept_test_iface", "hostInterface", "accept_test"),
+				),
+			},
 		},
 	})
 }
@@ -80,4 +91,10 @@ func testAccCheckLXCBridgeDestroy(s *terraform.State) error {
 var testAccLXCBridge = `
 	resource "lxc_bridge" "accept_test" {
 		name = "accept_test"
+	}`
+
+var testAccLXCBridgeWithIface = `
+	resource "lxc_bridge" "accept_test" {
+		name = "accept_test_ip"
+		hostInterface = "accept_test"
 	}`

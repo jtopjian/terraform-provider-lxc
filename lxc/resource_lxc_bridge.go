@@ -20,6 +20,13 @@ func resourceLXCBridge() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+			},
+
+			"hostInterface": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"mac": &schema.Schema{
@@ -40,16 +47,27 @@ func resourceLXCBridgeCreate(d *schema.ResourceData, meta interface{}) error {
 			Name: d.Get("name").(string),
 		}}
 		if err := netlink.LinkAdd(bridge); err != nil {
-			return fmt.Errorf("Error creating bridge: %v", err)
+			return fmt.Errorf("Error creating bridge %s: %v", br, err)
+		}
+
+		if ifaceName, ok := d.GetOk("hostInterface"); ok {
+			iface, err := netlink.LinkByName(ifaceName.(string))
+			if err != nil {
+				return fmt.Errorf("Error adding host interface %s to bridge %s : unknow host interface %v", ifaceName, br ,err)
+			}
+
+			if err := netlink.LinkSetMasterByIndex(iface, bridge.Attrs().Index); err != nil {
+				return fmt.Errorf("Error adding host interface %s to bridge %s : %v", ifaceName, br, err)
+			}
 		}
 		log.Printf("[INFO] Created new bridge %s: %v", br, bridge)
 	} else {
 		log.Printf("[INFO] Found existing bridge %s: %v", br, bridge)
 	}
 
-	log.Printf("[INFO] Bringing bridge up.")
+	log.Printf("[INFO] Bringing bridge %s up", br)
 	if err := netlink.LinkSetUp(bridge); err != nil {
-		return fmt.Errorf("Error bringing bridge up: %v", err)
+		return fmt.Errorf("Error bringing bridge %s up: %v", br, err)
 	}
 
 	d.SetId(strconv.Itoa(bridge.Attrs().Index))

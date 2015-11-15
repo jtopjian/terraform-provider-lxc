@@ -184,6 +184,7 @@ resource "lxc_container" "my_container" {
 
 * `name`: Required. The name of the container.
 * `backend`: Optional. The storage backend to use. Valid options are: btrfs, directory, lvm, zfs, aufs, overlayfs, loopback, or best. Defaults to `directory`.
+* `exec`: Optional. Commands to run after container creation. This won't be interpreted by a shell so use `bash -c "{shellcode}"` if you want a shell.
 * `template_name`: Optional. Defaults to `download`. See `/usr/share/lxc/templates` for more template options.
 * `template_distro`: Optional. Defaults to `ubuntu`.
 * `template_release`: Optional. Defaults to `trusty`.
